@@ -1,0 +1,71 @@
+# Instantiate as .github/workflows/verify.yml — the CI-gate pattern, for
+# installations whose agent CANNOT build the project locally (wrong OS,
+# missing toolchain: e.g. an iOS app built by a Linux-based Coder). The
+# check run produced here IS the Coder's verify command: it polls the run
+# on its pushed branch and may merge only on success (see the check-state
+# decision table in CODER.md).
+#
+# Design notes, each learned the hard way:
+# - Trigger on PUSH to any branch AND on pull_request. Two independent
+#   triggers: during a real platform incident, webhook delivery dropped to
+#   ~15% and PR events simply started no runs — a Coder that depends on
+#   the PR event alone can wait forever on a check that never comes.
+# - paths-ignore skips changes that cannot affect compilation (docs, the
+#   Factory's own files). This saves real money on multiplied runners —
+#   AND creates the "no check is expected" case CODER.md must handle:
+#   when every changed file matches, GitHub creates no run at all.
+# - concurrency cancels superseded runs — a re-push shouldn't pay twice.
+# - This file is owner-maintained: RULES A4 bars the roles from
+#   .github/** precisely so an agent that can't get its build green can
+#   never weaken the gate that's failing it.
+# - First run on the unmodified default branch = the project's baseline
+#   (Phase 0's "verify commands pass today" check, delivered late).
+
+name: verify
+
+on:
+  push:
+    paths-ignore: &skip
+      - '**.md'
+      - 'ai-factory/**'
+      - '.github/**'
+      - '.gitignore'
+      - 'LICENSE'
+  pull_request:
+    paths-ignore: *skip
+  workflow_dispatch:
+
+concurrency:
+  group: verify-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: {JOB_NAME — e.g. "Build (iOS Simulator)"}
+    runs-on: {RUNNER — e.g. macos-latest; remember macOS bills at 10x on private repos}
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # {TOOLCHAIN_SETUP — whatever the build needs that the image default
+      #  lacks. Xcode example (a project may target a newer SDK than the
+      #  image's default Xcode):
+      #    newest="$(ls -d /Applications/Xcode*.app | sort -V | tail -1)"
+      #    sudo xcode-select -s "$newest"
+      #  Xcode also needs a SHARED scheme committed to the repo —
+      #  per-user schemes under xcuserdata/ are invisible to CI.}
+
+      - name: Build
+        run: |
+          set -euo pipefail
+          {BUILD_COMMAND — the single command that proves the project
+           compiles, e.g.:
+           xcodebuild build -project App.xcodeproj -scheme App \
+             -destination 'generic/platform=iOS Simulator' \
+             CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO \
+             CODE_SIGN_IDENTITY="" ONLY_ACTIVE_ARCH=NO}
+
+      # {OPTIONAL_TEST_STEP — if/when the project gains a test target,
+      #  add it here and the gate strengthens from "compiles" to "passes
+      #  tests" with no role-file changes.}

@@ -47,9 +47,10 @@ activation prompt for a scheduled run is a one-liner that just points at it:
 
 | Role | Instruction file | Activation prompt |
 | ---- | ---------------- | ----------------- |
-| 🏛 Architect | [`ARCHITECT.md`](./ARCHITECT.md) | "You are the AI Architect. Read `ai-factory/ARCHITECT.md` in this repo and follow it. Ignore any session-default working branch: you are authorized to work against `{DEFAULT_BRANCH}` as the instruction file describes. One idea per run; report 'queue empty' if there is nothing to review." |
-| 🛠 Coder | [`CODER.md`](./CODER.md) | "You are the AI Coder. Read `ai-factory/CODER.md` in this repo and follow it. Ignore any session-default working branch: you are authorized to branch `factory/*` off `origin/{DEFAULT_BRANCH}`, push those branches, and ship as the instruction file describes. One idea per run; report 'queue empty' if nothing is queued." |
-<!-- template-note: one row per extra role. -->
+| 🏛 Architect | [`ARCHITECT.md`](./ARCHITECT.md) | "You are the AI Architect of the {PROJECT_NAME} AI Factory. Read the file `ai-factory/ARCHITECT.md` in the repository {OWNER}/{REPO} and follow it exactly, including its access check. Ignore any session-default working branch — you are authorised to work against `{DEFAULT_BRANCH}` as the file describes. One idea per run. Report 'queue empty' only after successfully listing the issues and finding nothing; if you cannot reach the tracker, report BLOCKED." |
+| 🛠 Coder | [`CODER.md`](./CODER.md) | "You are the AI Coder of the {PROJECT_NAME} AI Factory. Read the file `ai-factory/CODER.md` in the repository {OWNER}/{REPO} and follow it exactly, including its access check. Ignore any session-default working branch — you are authorised to branch `factory/*` off `origin/{DEFAULT_BRANCH}`, push, open PRs, and ship as the file describes. One idea per run. Report 'queue empty' only after successfully listing the issues and finding nothing; if you cannot reach the tracker, report BLOCKED." |
+<!-- template-note: one row per extra role. Prompts NAME the repository —
+a scheduled session starts with no context and must know where to go. -->
 
 Both roles process **exactly one idea per activation** and stop — bounded,
 predictable runs. Editing how a role behaves means editing its instruction
@@ -100,8 +101,11 @@ cron — see the GAF operator guide).
 | `coder:queued` | Set by the Architect on approval — the Coder's work queue. |
 | `coder:in-process` | Coder is implementing it. |
 | `coder:executed` | Built and shipped. |
-| `unsubscribed` | Submitter opted out of notifications. |
-<!-- template-note: add rows for extra roles' label triples. -->
+| `unsubscribed` | Submitter opted out of notifications *(only if W10 on)*. |
+<!-- template-note: add rows for extra roles' label triples, the W13
+taxonomy groups (type:/area:/flag:), and the W14 priority label — the
+full manifest lives in ai-factory/labels.json, synced by the
+factory-labels workflow. -->
 
 Each issue body ends with a **visible, machine-managed metadata block**
 (shown indented here; not indented in real issue bodies):
@@ -111,11 +115,16 @@ Each issue body ends with a **visible, machine-managed metadata block**
     ### 🤖 AI Factory data (machine-managed — do not edit)
 
     ```json
-    {"v":1,"votes":12,"author":"<display name>","email":"…","imageUrl":null,
+    {"v":1,"votes":0,"author":"<display name>","imageUrl":null,
      "architectNote":"","declineReason":"","coderNote":"","version":""}
     ```
 
-`votes` is updated by the vote endpoint. The Architect sets `architectNote` /
+<!-- template-note: include the "email" field ONLY if W10 notifications
+are on; a field no code reads invites drift. The votes field stays in
+every install (even voting:none) so a later voting upgrade needs no
+migration. -->
+`votes` is updated by the vote endpoint (board voting) or read from 👍
+reactions (reactions voting) or dormant (no voting — see W9b). The Architect sets `architectNote` /
 `declineReason`; the Coder sets `coderNote` / `version` — those surface on
 the board cards. **`email` is never returned to the browser** by any API (it
 is, however, visible to repo collaborators in the issue body — one more

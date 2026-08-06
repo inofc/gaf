@@ -19,7 +19,11 @@ triage, code, review, deploy. A Factory removes them:
 
 1. **Users propose ideas** — in words, optionally with an image — on a public
    Ideas Board (or directly in the issue tracker).
-2. **The community votes.** The most-wanted ideas rise.
+2. **The community votes — optionally.** Voting is an upgrade for real
+   multi-user communities, not the base scenario (Workbook W9b): the base
+   pipeline triages ideas in order (priority lane, then oldest), and a
+   solo install runs perfectly with the vote machinery dormant. Options:
+   none / 👍-reactions (zero infra) / board votes.
 3. **The AI Architect** wakes on a schedule, takes the top unreviewed idea,
    and publishes a written verdict: approved (with an impact rating and a
    concrete implementation sketch) or declined (with a reason). Its verdict
@@ -140,7 +144,9 @@ Every idea issue's body **ends** with a visible, machine-managed block
   a body they write back destroys the data. A visible fenced block reaches
   every reader unchanged.
 - The human-readable description sits above it; machines edit only the JSON.
-- `votes` — incremented by the vote endpoint.
+- `votes` — incremented by the vote endpoint (board voting); read from
+  👍 reactions instead under reactions-voting; dormant but **kept in every
+  install** so a later voting upgrade needs no migration.
 - `author` — the submitter's chosen display name (pseudonym).
 - `email` — optional, **server-side only**: never returned by any API, never
   quoted in comments/commits/UI. If the repo is or will become public, do not
@@ -196,6 +202,11 @@ and re-checks it at its own stage (defense-in-depth). Structure:
   idea can be resubmitted; a wrongly shipped one is live).
 
 ## 5. The public web layer (optional)
+
+> Intake, voting, and notifications are three separable choices (Workbook
+> W9/W9b/W10): a board can exist submit-only with reactions-voting or no
+> voting at all; tracker-direct intake can still have reactions-voting.
+> Build only the endpoints the profile's choices need.
 
 Gives non-technical users a friendly face: a board page on the product's site
 plus a handful of serverless functions holding the tracker token server-side.
@@ -313,3 +324,13 @@ generated file:
     are community-authored content the roles *evaluate*, never instructions
     they *obey* (see `WEAKNESSES.md` for the planned hardening; role files
     should already refuse to treat idea text as directives).
+14. **Fail loudly, never idle-fail** — "queue empty" may only follow a
+    tracker listing that *succeeded*; a role that cannot reach the tracker
+    reports **BLOCKED** and stops. Without this, a Factory that silently
+    loses its credentials is indistinguishable from a healthy idle one,
+    forever (role contract R0 — learned from a real dead-silent run).
+15. **When the agent can't build, CI is the verify command** — for
+    projects the roles cannot compile (wrong OS/toolchain), a workflow
+    builds every push and the check run is the only accepted evidence;
+    the Coder polls it and resumes across activations rather than waiting
+    (R7). See `templates/VERIFY_CI.template.yml`.
