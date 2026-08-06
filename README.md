@@ -4,18 +4,21 @@
 project into one that improves itself: the community proposes ideas, votes on
 them, and independently scheduled AI roles review, build, and ship the winners
 — each decision documented in public, the whole pipeline steered by one
-owner-controlled rulebook.
+owner-controlled rulebook. Voting is optional — the base pipeline simply
+triages ideas in order, and a solo private install is a first-class shape.
 
 This repository is the **installable skill** that sets a Factory up in any
 project: a game, a SaaS product, a website builder, an internal tool.
 
 ## Provenance
 
-This is not speculative documentation. It was reverse-standardized from a
-live, working Factory — a browser game whose community ideas were triaged,
-built, merged, and deployed by AI roles with no human in the loop, across
-multiple shipped versions. Every design rule here exists because of a real
-success or a real failure in that installation.
+This is not speculative documentation. It was reverse-standardized from
+two live installations: a browser game (community web board, voting,
+email, auto-deploy) whose ideas shipped with no human in the loop, and a
+private iOS app (solo owner, tracker-direct, no voting, CI compile gate
+because the agent cannot build iOS locally) — which also stress-tested
+the pipeline through a real platform outage on day one. Every design rule
+here exists because of a real success or a real failure in one of them.
 
 ## What's in here
 
@@ -25,7 +28,8 @@ success or a real failure in that installation.
 | [`references/BLUEPRINT.md`](./references/BLUEPRINT.md) | The invariant pattern: data model, label grammar, meta block, web-layer contract, and the design rules that keep a Factory alive unattended. |
 | [`references/ROLES.md`](./references/ROLES.md) | The six-clause role contract, the default Architect → Coder pipeline, and recipes for extending it (Tester, Deployer). |
 | [`references/OWNER_WORKBOOK.md`](./references/OWNER_WORKBOOK.md) | The guided owner interview — 12 decisions, each explained and illustrated across four domains before it's asked. |
-| [`references/OPERATOR_GUIDE.md`](./references/OPERATOR_GUIDE.md) | The human-only steps: bot account, tokens, secrets, schedules — with the traps that were hit for real. |
+| [`references/OPERATOR_GUIDE.md`](./references/OPERATOR_GUIDE.md) | The human-only steps — conditional on the chosen shape — with the token decision table, CI costs, and the traps that were hit for real. |
+| [`references/RUNNERS.md`](./references/RUNNERS.md) | **Exact click-path walkthroughs per runner** (Claude Routines, `/loop`, Actions cron), each runner's trap, and where secrets live. |
 | [`references/ADAPTATION.md`](./references/ADAPTATION.md) | Named swap points: issue tracker, deploy target, email provider, runner, and the hobby → business → regulated posture ladder. |
 | [`templates/`](./templates) | Fill-in templates for every generated file, plus the default label set as JSON. |
 | [`WEAKNESSES.md`](./WEAKNESSES.md) | Known limitations of the pattern (K1–K10), deliberately deferred. Read before installing; revisit as a Factory grows. |
@@ -44,6 +48,11 @@ frontmatter. Then, in a session on that project:
 
 > *"Set up a GAF in this project — read `.claude/skills/gaf-setup/SKILL.md`
 > and follow it."*
+
+Setup opens with a **wizard briefing**: before anything runs, the agent
+lays out all phases in plain words — what happens after what, which parts
+are yours, roughly how long each takes — and asks one shaping question
+(Minimal vs Community) that prunes everything that follows.
 
 ## What setup actually requires
 

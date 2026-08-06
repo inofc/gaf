@@ -3,9 +3,12 @@
 <!-- template-note
 Instantiate as ai-factory/RULES.md. Fill Section A from the profile's W2
 (invariants), W3 (tech scope), W4 (content policy), W7/W8 (monetization /
-gate specifics); Section B from W5. Keep A1–A5 in every installation —
-reword to the product, never delete. Number added rules consecutively.
-Delete all template-note blocks.
+gate specifics); Section B from W5. NUMBERING IS FIXED AND PERMANENT:
+A1–A7 as templated (reword to the product, never delete, never renumber);
+owner-specific invariants start at A8. Roles cite rule numbers — a
+renumbering after install breaks every citation in every assessment.
+For "discussable but never auto-built" topics use the OWNER-GATED rule
+shape (see the A8+ example below). Delete all template-note blocks.
 -->
 
 The shared rulebook that binds **every** AI role. The Architect enforces it
@@ -58,8 +61,28 @@ real people.}
 **A7 — Monetization is owner-only.** Decline ideas adding payments, ads,
 paywalls, or "premium" anything.
 
-{EXTRA_A_RULES — additional numbered invariants from the profile's W2, e.g.
-domain-specific auto-decline lists; delete if none.}
+{EXTRA_A_RULES — the profile's W2 invariants, numbered from A8. Two
+proven shapes worth reusing:
+
+**A8 — <topic> is owner-gated.** Ideas proposing <topic> are *in scope to
+discuss but never to build autonomously*: the Architect gives them a
+genuine public Assessment, then **declines** with the reason "<topic>
+requires an owner decision (A8)" — it may never add `coder:queued` to
+one. Only the owner promotes such an idea, by hand. (Use for: features
+that rewrite a core promise, e.g. cloud sync in a privacy-first app;
+anything no role can verify actually behaves.)
+
+**A9 — Unbuilt sections are owner-gated** *(W15 installs)*. Placeholder
+surfaces ({list}) may be **polished** — wording, layout, icons,
+accessibility, the "coming soon" message, adding/reordering a teaser —
+but the feature behind them may not be implemented in whole or part:
+assess publicly, decline "unbuilt section — requires owner design (A9)",
+label `flag:placeholder`. Rationale: a plausible implementation compiles,
+passes CI, self-merges, and lands someone else's guess at an undesigned
+feature. See ROADMAP.md — which is intent, never a specification to
+build from.
+
+Delete if none.}
 
 ## B — Privacy guardrails
 

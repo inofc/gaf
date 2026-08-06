@@ -1,0 +1,79 @@
+# Instantiate as .github/workflows/factory-labels.yml.
+# Creates and keeps in sync the Factory's labels from ai-factory/labels.json.
+#
+# Why a workflow: the roles' tooling often has no label-creation call, and
+# direct REST access from agent environments may be blocked — the runner's
+# built-in GITHUB_TOKEN can always create labels, needs no PAT, and leaves
+# an audit log. Runs on the cheapest tier (1x); idempotent (re-running
+# edits to match the file); applies renames FIRST so a renamed label keeps
+# its identity on existing issues. Owner-maintained (RULES A4).
+
+name: factory-labels
+
+on:
+  push:
+    branches: [main]   # ← the default branch
+    paths:
+      - 'ai-factory/labels.json'
+      - '.github/workflows/factory-labels.yml'
+  workflow_dispatch:
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  sync:
+    name: Sync labels from ai-factory/labels.json
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Apply renames first
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          if [ "$(jq '.renames // [] | length' ai-factory/labels.json)" = "0" ]; then
+            echo "No renames declared."; exit 0
+          fi
+          while IFS=$'\t' read -r from to; do
+            [ -z "$from" ] && continue
+            if ! gh label list --limit 200 --json name --jq '.[].name' | grep -qxF "$from"; then
+              echo "skip     $from (does not exist — already renamed?)"; continue
+            fi
+            if gh label list --limit 200 --json name --jq '.[].name' | grep -qxF "$to"; then
+              echo "CONFLICT $from -> $to (target exists; leaving both)"; continue
+            fi
+            gh label edit "$from" --name "$to"
+            echo "renamed  $from -> $to"
+          done < <(jq -r '.renames // [] | .[] | [.from, .to] | @tsv' ai-factory/labels.json)
+
+      - name: Create or update every label
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          created=0; updated=0
+          while IFS=$'\t' read -r name color description; do
+            [ -z "$name" ] && continue
+            if gh label create "$name" --color "$color" --description "$description" 2>/dev/null; then
+              echo "created  $name"; created=$((created + 1))
+            else
+              gh label edit "$name" --color "$color" --description "$description"
+              echo "updated  $name"; updated=$((updated + 1))
+            fi
+          done < <(jq -r '.labels[] | [.name, .color, .description] | @tsv' ai-factory/labels.json)
+          echo; echo "Done: $created created, $updated updated."
+          # Deliberately NO pruning of labels absent from the file — that
+          # would delete the platform's built-in labels too.
+
+      - name: Report the resulting label set
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: gh label list --limit 200

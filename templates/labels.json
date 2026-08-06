@@ -1,16 +1,36 @@
 {
-  "comment": "Default GAF label set for the Architect → Coder pipeline. Create ALL of these during setup (Phase 3.1) — missing labels are the most common silent setup failure. Extension roles add their own triple: <role>:queued / <role>:in-process / <role>:executed (grammar in references/ROLES.md).",
+  "comment": "GAF label manifest template. Instantiate as ai-factory/labels.json and let FACTORY_LABELS.template.yml (as .github/workflows/factory-labels.yml) create and sync them — works even where the agent has no label API, and keeps labels in sync forever. Rules: create ALL labels the profile enables and NONE it doesn't (no notifications → no 'unsubscribed'; no voting → nothing vote-related). Missing labels are the most common silent setup failure. Owner-maintained; the Factory may not edit this file (RULES A4).",
+
+  "renames_comment": "Renames are applied BEFORE the sync loop and preserve a label's identity, so it stays attached to issues already carrying it (create-new-plus-delete-old would strip it from history). Each entry is a no-op once applied — safe to leave in place. Never rename onto an existing name.",
+  "renames": [],
+
+  "pipeline_labels_comment": "The state machine. Always created. Extension roles add their triple: <role>:queued/in-process/executed.",
   "labels": [
-    { "name": "idea", "color": "FBCA04", "description": "A community idea (boards list only these)" },
-    { "name": "stage:submitted", "color": "C2E0C6", "description": "New; collecting votes; awaiting the AI Architect" },
+    { "name": "idea",               "color": "FBCA04", "description": "An idea — the Factory's unit of work" },
+    { "name": "stage:submitted",    "color": "C2E0C6", "description": "New; awaiting the AI Architect" },
     { "name": "architect:approved", "color": "0E8A16", "description": "Approved for building by the AI Architect" },
     { "name": "architect:declined", "color": "B60205", "description": "Declined by the AI Architect; reason documented" },
-    { "name": "impact:minor", "color": "BFD4F2", "description": "Impact rating: isolated change" },
-    { "name": "impact:moderate", "color": "5319E7", "description": "Impact rating: several files or a new feature surface" },
-    { "name": "impact:major", "color": "D93F0B", "description": "Impact rating: touches core logic / architecture / balance" },
-    { "name": "coder:queued", "color": "FEF2C0", "description": "In the AI Coder's work queue (set by the Architect on approval)" },
-    { "name": "coder:in-process", "color": "F9D0C4", "description": "An AI Coder run has claimed this and is building" },
-    { "name": "coder:executed", "color": "006B75", "description": "Built and shipped by the AI Coder" },
-    { "name": "unsubscribed", "color": "EEEEEE", "description": "Submitter opted out of notifications" }
+    { "name": "impact:minor",       "color": "BFD4F2", "description": "Impact: isolated change" },
+    { "name": "impact:moderate",    "color": "5319E7", "description": "Impact: several files or a new feature surface" },
+    { "name": "impact:major",       "color": "D93F0B", "description": "Impact: core logic or architecture{ — owner must merge, if W8 gates it}" },
+    { "name": "coder:queued",       "color": "FEF2C0", "description": "In the AI Coder's queue (added by the Architect on approval)" },
+    { "name": "coder:in-process",   "color": "F9D0C4", "description": "An AI Coder run has claimed this and is building" },
+    { "name": "coder:executed",     "color": "006B75", "description": "Built, verified and shipped per the ship definition" }
+  ],
+
+  "conditional_labels_comment": "Append into 'labels' only what the profile enables. W10 notifications → { name: 'unsubscribed', color: 'EEEEEE', description: 'Submitter opted out of notifications' }. W14 priority lane → { name: 'priority:owner', color: 'D4A017', description: 'Filed by the owner — picked first by both roles' }.",
+
+  "taxonomy_comment": "W13, if chosen. type:* — exactly one per idea; keep the set mutually exclusive or filtering stops meaning anything; scope type:infra to product build config, explicitly NEVER the Factory's own files. area:* — GENERATE from the Phase 0 file map (label per source file/surface + one catch-all for project config & docs); avoid names colliding with the product's own user-facing vocabulary. flag:* — only flags that CHANGE ROLE BEHAVIOUR (e.g. flag:privacy → Architect must justify the privacy invariant, Coder must report on it; flag:placeholder → pairs with the W15 gate).",
+  "taxonomy_example": [
+    { "name": "type:feature",       "color": "1D76DB", "description": "A new capability or surface" },
+    { "name": "type:bug",           "color": "D73A4A", "description": "Something is broken or behaves contrary to intent" },
+    { "name": "type:polish",        "color": "C5DEF5", "description": "Visual, copy or ergonomic refinement of something existing" },
+    { "name": "type:accessibility", "color": "0052CC", "description": "Assistive tech, contrast, hit targets, layout adaptivity" },
+    { "name": "type:performance",   "color": "7057FF", "description": "Responsiveness, memory, large-data behaviour" },
+    { "name": "type:infra",         "color": "444444", "description": "Product build configuration — never the Factory's own files" },
+    { "name": "type:docs",          "color": "0075CA", "description": "Repository documentation" },
+    { "name": "type:refactor",      "color": "A2EEEF", "description": "Internal restructuring, no user-visible change" },
+    { "name": "area:<from-file-map>", "color": "C9E4FF", "description": "<one label per source file / product surface>" },
+    { "name": "flag:privacy",       "color": "E11D48", "description": "Touches the privacy surface — invariant justification required in Assessment and Report" }
   ]
 }
