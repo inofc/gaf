@@ -1,4 +1,4 @@
-# 🎩🥸🏭 GAF — Generative AI Factory
+# 🎩 GAF — Generative AI Factory
 
 **GAF is a pattern; a Factory is one installation of it.** It turns a software
 project into one that improves itself: the community proposes ideas, votes on
