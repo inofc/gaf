@@ -1,174 +1,166 @@
 # 🧑‍🔧 GAF Operator Guide — the human-only steps
 
-Some parts of a Factory can only be done by a person: creating accounts,
-generating tokens, entering secrets into dashboards, verifying an email
-sender, creating schedules. This guide walks the operator (usually the
-project owner) through each one, in order, with the agent verifying every
-step before setup continues. It is written for GitHub + Vercel + Resend —
-the proven reference stack; substitutions are in
-[`ADAPTATION.md`](./ADAPTATION.md), and the *shape* of every step (identity →
-least-privilege access → credential → configuration → verify) is the same on
-any platform.
+Some parts of a Factory can only be done by a person: accounts, tokens,
+secrets, schedules. This guide walks the operator (usually the owner)
+through each one, with the agent verifying every step before setup
+continues. Written for GitHub + Vercel + Resend; substitutions in
+[`ADAPTATION.md`](./ADAPTATION.md); runner-specific click-paths in
+[`RUNNERS.md`](./RUNNERS.md). Every trap below was hit for real.
 
-Everything here descends from a live installation's setup notes — including
-the traps, which were all hit for real.
+**Which steps apply to *you*** — check the profile first; a Minimal
+install skips most of this:
+
+| Profile choice | Steps needed |
+| -------------- | ------------ |
+| Tracker-direct, no board, no email, owner runs the roles | **O6 only** (schedules + per-schedule repo access) — O1–O5 all skipped |
+| Web board (Community) | O1–O4, O6 |
+| Email notifications | + O5 |
+
+**Secrets hygiene, always:** never paste a token into the chat with the
+agent — a transcript is not a secret store. Tokens go into the runner's
+environment or the hosting dashboard; tell the agent the *name* of the
+variable, never the value.
 
 ---
 
-## O1 — Create the Factory bot account
+## O1 — Create the Factory bot account *(board installs; optional otherwise)*
 
-Use a **dedicated machine account** for the Factory's credentials — not your
-personal account. Every idea-issue, vote edit, image commit, role comment,
-and agent commit is authored by this identity, so it should *be* the Factory
-— and its token has a tiny blast radius if it ever leaks.
+A **dedicated machine account** gives the Factory its own identity and its
+token a tiny blast radius. It is **required** for the web-board shape (the
+board's server needs credentials that are not yours) and recommended once
+untrusted users can file content the roles will read.
 
-1. Make a fresh email for it (a `+alias` on an existing inbox works).
-2. Create the GitHub account. **Enable 2FA** and save the recovery codes —
-   this account runs automation; don't get locked out of it.
-3. In the bot's **Settings → Emails**, enable **"Keep my email address
-   private"** so its commits use a `noreply` address.
-4. Name it per the profile's W12 (`bot_name`) — the name appears on every
-   public comment.
+A **solo/private install may skip the bot** and run under the owner's
+account — with three consequences to accept knowingly (record them in the
+profile): any human gate is convention, not enforcement (branch protection
+cannot bind the repo owner); the platform won't notify you about your own
+account's actions, so the issue list and `CASES.md` become pull-not-push;
+and the paper trail needs the role-attribution convention (W12) to stay
+readable. Revisit the bot decision before the repo goes public.
 
-GitHub permits one machine/bot account per person on the free tier, so this
-is within the rules.
+If creating one: fresh email (+alias works), **enable 2FA**, keep the
+email private (noreply commits), name per W12. One machine account per
+person is within GitHub's free-tier rules.
 
-## O2 — Grant Write access (not admin)
+## O2 — Grant Write access (not admin) *(bot installs only)*
 
-Keep the repo owned by your own account; add the bot as a collaborator.
+Repo → Settings → Collaborators → add the bot with **Write**. The bot
+**must accept the invite** — a pending invite behaves exactly like no
+access (classic source of mysterious 404s).
 
-- Repo → **Settings → Collaborators** → add the bot with the **Write** role.
-- The bot receives an invite at its email and **must accept it** — a pending
-  invite behaves exactly like no access, and is a classic source of
-  mysterious 404s later.
+> ⚠️ **Branch protection:** if the default branch requires PR reviews, a
+> lone Write collaborator cannot self-merge — the "Coder merges itself"
+> ship definition breaks. Exempt the bot, drop the requirement, or choose
+> the human-gate ship definition — decide it, don't discover it.
 
-**Write is all the Factory needs**: create issues, comment, label, commit
-files, push branches, open/merge PRs. Admin would also allow changing
-settings or deleting the repo — unnecessary risk.
+## O3 — Generate the token: pick the right *kind*
 
-> ⚠️ **Branch protection interaction:** if the repo requires PR reviews on
-> the default branch, a lone Write collaborator cannot self-merge its own
-> PRs — the reference ship definition ("Coder merges itself") breaks. Either
-> exempt the bot, drop the requirement, or deliberately choose the
-> human-gate ship definition (Workbook W7/W8) — but decide it, don't
-> discover it.
+The right token type depends on **who owns the repo relative to the
+account holding the token** — getting this wrong produces confusing 404s:
 
-## O3 — Generate the bot's token: a CLASSIC PAT
+| Situation | Token type | Why |
+| --------- | ---------- | --- |
+| Owner's own account, owner-owned repo *(solo installs)* | **Fine-grained PAT, scoped to that one repo** | Smallest blast radius: Contents + Issues + Pull requests R/W, Actions Read, Metadata Read. An injected idea (weakness K3) reaches one repo, not every repo you own. |
+| Bot as collaborator on a repo owned by a *different personal account* *(reference board setup)* | **Classic PAT, `repo` scope** | Fine-grained PATs cannot reach a private repo owned by another personal account even with an accepted invite — the API answers 404. Confirmed the hard way. |
+| Bot in an org that owns the repo | Fine-grained works | Resource owner = the org. |
 
-> ⚠️ **Do not use a fine-grained token for a collaborator setup.**
-> Fine-grained PATs are scoped to a "resource owner" and **cannot reach a
-> private repo owned by a different personal account**, even when the bot is
-> an accepted collaborator — the API answers `404 Not Found`. Confirmed the
-> hard way in the reference installation. (Fine-grained becomes viable only
-> when the repo lives in an org the bot belongs to, or on the bot's own
-> account.)
-
-Logged in **as the bot**: Settings → Developer settings → **Personal access
-tokens → Tokens (classic)** → Generate new token (classic).
-
-- **Scopes:** the **`repo`** group (covers issues + contents on private
-  repos — everything the Factory needs).
-- Long expiry, or a calendar reminder to rotate. Copy the `ghp_…` token —
-  GitHub shows it once.
-
-**Verify (agent does this the moment you hand the token over):**
+Long expiry or a rotation reminder. **Verify (agent, the moment it
+lands — from wherever the token will actually be used):**
 
 ```bash
-curl -s -H "Authorization: Bearer <TOKEN>" https://api.github.com/repos/<owner>/<repo> | head -5
-# expect JSON with "id": … — not "Not Found" / "Bad credentials"
+curl -s -H "Authorization: Bearer <TOKEN>" https://api.github.com/repos/<owner>/<repo>/issues?state=open | head -5
+# expect a JSON array — not "Not Found" / "Bad credentials" / 403
 ```
 
-## O4 — Configure hosting & environment variables *(if web board, W9)*
+## O4 — Hosting & environment variables *(web board only)*
 
-Import the repo into the hosting platform (reference: Vercel, framework
-preset auto-detected; the `/api` functions deploy automatically). Then in
-**Project → Settings → Environment Variables** add:
+Import the repo into the hosting platform; add in Project → Settings →
+Environment Variables:
 
 | Name | Value | Required for |
 | ---- | ----- | ------------ |
-| `GITHUB_TOKEN` | the bot's classic PAT (O3) | submit + vote |
+| `GITHUB_TOKEN` | the token from O3 | submit + vote |
 | `GITHUB_REPO` | `owner/name` — no URL, no `.git` | submit + vote |
 | `RESEND_API_KEY` | email provider key (O5) | notifications |
-| `NOTIFY_FROM` | verified sender, e.g. `Product <factory@yourdomain>` | notifications |
-| `FACTORY_NOTIFY_SECRET` | a long random string you generate | notify guard + unsubscribe links |
-| `PUBLIC_BASE_URL` | the site origin, e.g. `https://yourapp.example` | unsubscribe links |
+| `NOTIFY_FROM` | verified sender | notifications |
+| `FACTORY_NOTIFY_SECRET` | long random string | notify guard + unsubscribe |
+| `PUBLIC_BASE_URL` | site origin | unsubscribe links |
 
-Submitting and voting need only the first two; the rest can come later.
-Enable each var for **Production** (and Preview if you test previews).
+> ⚠️ **Redeploy after setting variables** — they are baked in at deploy
+> time. The single most common setup miss.
 
-> ⚠️ **Redeploy after setting variables.** Env vars are baked in at deploy
-> time; the deployment that existed before you added them was built without
-> them. This is the single most common setup miss. Trigger a redeploy (push
-> any commit, or Deployments → ⋯ → Redeploy), then test.
+## O5 — Email provider *(if notifications)*
 
-## O5 — Email provider *(if notifications, W10)*
+Create the account, **verify the sender domain** (unverified senders fail
+or land in spam), generate the key → env. Test end-to-end after O4's
+redeploy, including that **the unsubscribe link works**.
 
-1. Create the account (reference: Resend; alternatives in `ADAPTATION.md`).
-2. **Verify the sender domain** (DNS records) — unverified senders either
-   fail or land in spam.
-3. Generate the API key → `RESEND_API_KEY`; set `NOTIFY_FROM` to the
-   verified sender.
-4. Test: after O4's redeploy, the agent submits a test idea with a test
-   email and triggers a notify — confirm the mail arrives **and its
-   unsubscribe link works**.
+## O6 — Schedules & per-schedule repo access *(Phase 5 — after the smoke test)*
 
-## O6 — Create the schedules *(Phase 5 — only after the smoke test passes)*
+Each role is one schedule firing its one-line activation prompt.
+**Click-paths per runner, including each runner's traps, are in
+[`RUNNERS.md`](./RUNNERS.md)** — hand the owner that file, don't
+paraphrase it.
 
-Each role is one recurring schedule whose prompt is the one-liner from the
-generated `ai-factory/README.md`. Any runner that can execute an AI agent
-against the repo works:
+The one rule that outranks all others: **a scheduled session inherits no
+access from anyone.** Each schedule must itself carry GitHub access —
+the repo attached to it, or a token in its environment. The agent verifies
+by firing each schedule once manually and confirming the role could list
+issues (the role files report **BLOCKED** loudly if not; if a run says
+"queue empty" while ideas exist, treat it as an access failure
+mis-reported).
 
-| Runner | How | Notes |
-| ------ | --- | ----- |
-| **Claude Code Routine / scheduled trigger** | cron trigger spawning a fresh session with the activation prompt | the reference runner |
-| **Claude Code `/loop`** | recurring local loop, same prompt | good for supervised trial weeks |
-| **GitHub Actions cron** | workflow running an agent action on schedule | also where a specific model per role is pinned |
+Cadence rules: interval ≥ run length; Coder offset 30–60 min after the
+Architect; 6–24 h steady state (every firing is a billed agent session
+even when idle). Pause switch: disable a schedule = pause a role.
 
-Rules (from the profile's W11): cadence per role, **Coder offset 30–60 min
-after the Architect**, never an interval shorter than a run, 3–24 h sensible
-range. The runner needs the bot identity's credentials, and — for
-notifications — `FACTORY_NOTIFY_SECRET` + `PUBLIC_BASE_URL` in *its*
-environment (roles skip notifications gracefully when unset).
+## O7 — What CI costs *(installs using the CI-gate pattern)*
 
-**Your controls, permanently:**
-- **Pause switch** — disable a role's schedule to pause that role; disable
-  both to stop the Factory. Nothing in the repo changes.
-- **Manual run** — paste a role's activation prompt into any agent session.
-- **Steering wheel** — edit `ai-factory/RULES.md`. Only you may.
+- GitHub-hosted **macOS runners bill at 10×** against the included
+  minutes (Linux 1×); a ~1-minute iOS build ≈ 20 minutes-equivalent —
+  a 2,000-minute allowance ≈ 100 builds/month; overage ≈ $0.08/min.
+- GitHub may require a **payment method on file** before it schedules
+  jobs at all, even with free minutes remaining.
+- The generated verify workflow skips builds for changes that cannot
+  affect compilation (docs, `ai-factory/**`) — that both saves money and
+  creates the "no check is expected" case the CODER file handles.
 
-## O7 — Ongoing operator duties (small, but real)
+## O8 — Ongoing operator duties
 
-- **Rotate the bot token** before expiry; update it in hosting env +
-  runners; redeploy.
-- **Watch the first weeks**: skim each Assessment and Implementation Report.
-  You're not approving — you're checking the rulebook covers what you meant.
-  Gaps become `RULES.md` edits.
-- **Keep the repo private** while real submitter emails live in issue meta
-  (Workbook W5).
-- Revisit `WEAKNESSES.md` (in the GAF skill folder) as usage grows — vote
-  integrity and a test gate are the usual first upgrades.
+- Rotate tokens before expiry; update wherever they live; redeploy.
+- **Watch the first weeks**: skim each Assessment and Report — you're
+  checking the rulebook covers what you meant. Gaps become `RULES.md`
+  edits (yours alone).
+- Keep the repo private while any contact data lives in issue meta (W5).
+- Revisit `WEAKNESSES.md` as usage grows; before going public, re-run the
+  go-public checklist in the profile (bot account, injection surface,
+  spam, vote integrity).
 
 ---
 
 ## Troubleshooting
 
-### "Server is not configured (missing GITHUB_TOKEN / GITHUB_REPO)."
+### Jobs never start
 
-The serverless function runs but can't see the env vars. **Always a hosting
-configuration issue, never a code bug.** Check in order:
+| Symptom | Diagnosis |
+| ------- | --------- |
+| Jobs stuck `queued`, `runner_id: 0`, auto-cancelled after ~15 min — **on both Linux and macOS tiers** | Account-level or platform-level, never your code. **Check githubstatus.com first** — a platform incident looks exactly like a billing block (during one real incident, webhook delivery dropped to ~15% and pushes/PRs simply started no runs). Then check Billing → Actions (spending limit, no card on file). Cancelled runs are not revived by fixing billing — re-fire them. |
+| PR opened but no check appears (outside an incident) | The workflow's triggers or path filters skipped it — by design for docs-only changes; the CODER file's decision table covers it. |
 
-1. **Right project?** The vars must be on the project that serves your site.
-2. **Right environments?** Enabled for Production (and Preview if used).
-3. **Exact names/values.** Case-sensitive names; `GITHUB_REPO` is
-   `owner/name` — no URL, no `.git`, no trailing spaces.
-4. **Did you redeploy after adding them?** ⚠️ The most common miss — see O4.
+### API errors
 
-### Errors after the config one is gone
+| Error | Likely cause |
+| ----- | ------------ |
+| `Bad credentials` (401) | Token truncated/expired/revoked. |
+| `Resource not accessible` / 403 | Missing permission on a fine-grained token, or the collaborator invite was never accepted, or the session's runner has no repo attached. |
+| `Not Found` (404) | Wrong token *kind* for the ownership situation (see O3's table), wrong `owner/name`, or unaccepted invite. |
+| Role reports "queue empty" but ideas exist | Access failure mis-reported (pre-R0 role files) or pick-order filter bug — treat as BLOCKED and check access from the runner. |
 
-| Error from the API | Likely cause |
-| ------------------ | ------------ |
-| `Bad credentials` (401) | Token pasted wrong (truncated/whitespace), expired, or revoked — generate a fresh one. |
-| `Resource not accessible` / 403 | Token missing a permission, or the bot's collaborator **invite was never accepted**. |
-| `Not Found` (404) | **A fine-grained token was used** (see O3 — switch to classic `repo` scope), or `GITHUB_REPO` doesn't match the real `owner/name`, or the invite was never accepted. |
-| Emails not arriving | Sender domain not verified (O5), `RESEND_API_KEY` missing in the deployed env, or the issue is labeled `unsubscribed`. |
-| Coder can't merge its own PR | Branch protection requires reviews — see the warning in O2. |
+### Environment quirks
+
+| Symptom | Note |
+| ------- | ---- |
+| Agent cannot delete a remote branch | Some managed agent environments block ref deletion. Harmless — delete stale branches yourself in the UI (repo → Branches). |
+| `git` works but the API returns 403 from the agent | Git and API travel different channels in proxied environments; never infer one from the other (R0). |
+| Emails not arriving | Sender domain unverified (O5), key missing in the *deployed* env (O4 redeploy!), or the issue is labeled `unsubscribed`. |
+| Coder can't merge its own PR | Branch protection requires reviews — see O2. |
