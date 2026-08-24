@@ -1,0 +1,13 @@
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
+
+# Local agent + tooling state
+.claude/settings.local.json
+
+# An installed Factory's own files never belong in the GAF skill repo —
+# they are generated INTO a target project, not committed back here.
+ai-factory/
