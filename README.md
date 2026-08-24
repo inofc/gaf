@@ -33,6 +33,7 @@ here exists because of a real success or a real failure in one of them.
 | [`references/ADAPTATION.md`](./references/ADAPTATION.md) | Named swap points: issue tracker, deploy target, email provider, runner, and the hobby → business → regulated posture ladder. |
 | [`templates/`](./templates) | Fill-in templates for every generated file, plus the default label set as JSON. |
 | [`WEAKNESSES.md`](./WEAKNESSES.md) | Known limitations of the pattern (K1–K10), deliberately deferred. Read before installing; revisit as a Factory grows. |
+| [`CONTRIBUTING.md`](./CONTRIBUTING.md) | How to propose a change — and why every rule here has to come with the story of the install that earned it. |
 
 ## Installing it in a project
 
@@ -93,3 +94,16 @@ the repo as files** (so behavior changes are file edits, never schedule
 rewiring, and any runner or model can execute a role), and **nothing happens
 without a public paper trail** (no verdict without an assessment, no ship
 without a report, every approved idea in a ledger).
+
+## License
+
+Licensed under the [Apache License 2.0](./LICENSE) — use it, install it in
+commercial projects, adapt it. If you build something with it, saying so is
+appreciated but not required.
+
+## Contributing
+
+Bug reports about the pattern, new runner walkthroughs, and adaptation notes
+from your own installation are all welcome — see
+[`CONTRIBUTING.md`](./CONTRIBUTING.md). The one thing this repo asks: rules
+come from real installations, not from speculation.
