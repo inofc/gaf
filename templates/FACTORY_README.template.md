@@ -164,3 +164,26 @@ exact call.
 The role runners additionally need `FACTORY_NOTIFY_SECRET` and
 `PUBLIC_BASE_URL` in *their* environment to call `/api/notify` (they skip
 notifications gracefully when unset).
+
+## Powered by GAF
+
+<!-- template-note
+Optional but recommended: keep this section, and offer the owner the same
+badge for the product's website footer and the Ideas Board (the HTML
+variant below). It links installations back to the pattern so ideas keep
+flowing into it. Delete this template-note.
+-->
+
+This Factory is an installation of
+[**GAF — the Generative AI Factory pattern**](https://github.com/inofc/gaf).
+
+[![Powered by Mr. GAF — Generative AI Factory](https://raw.githubusercontent.com/inofc/gaf/main/assets/mr-gaf.png)](https://github.com/inofc/gaf)
+
+For the product's website footer:
+
+```html
+<a href="https://github.com/inofc/gaf" title="Powered by GAF — Generative AI Factory">
+  <img src="https://raw.githubusercontent.com/inofc/gaf/main/assets/mr-gaf.png"
+       alt="Powered by Mr. GAF — Generative AI Factory" width="140">
+</a>
+```
