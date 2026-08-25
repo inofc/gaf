@@ -119,14 +119,14 @@ link back here, so your users know who ships their ideas.
 **Markdown** (README, docs):
 
 ```markdown
-[![Powered by Mr. GAF — Generative AI Factory](https://raw.githubusercontent.com/inofc/gaf/main/assets/mr-gaf.png)](https://github.com/inofc/gaf)
+[![Powered by Mr. GAF — Generative AI Factory](https://raw.githubusercontent.com/inofc/gaf/main/assets/mr-gaf-badge.png)](https://github.com/inofc/gaf)
 ```
 
 **HTML** (websites — sized for a footer):
 
 ```html
 <a href="https://github.com/inofc/gaf" title="Powered by GAF — Generative AI Factory">
-  <img src="https://raw.githubusercontent.com/inofc/gaf/main/assets/mr-gaf.png"
+  <img src="https://raw.githubusercontent.com/inofc/gaf/main/assets/mr-gaf-badge.png"
        alt="Powered by Mr. GAF — Generative AI Factory" width="140">
 </a>
 ```
