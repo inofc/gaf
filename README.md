@@ -115,7 +115,7 @@ without a report, every approved idea in a ledger).
 
 <a href="https://github.com/inofc/gaf" title="Powered by GAF — Generative AI Factory">
   <img src="./assets/mr-gaf-badge.png"
-       alt="Powered by Mr. GAF — Generative AI Factory" width="47">
+       alt="Powered by Mr. GAF — Generative AI Factory" width="70">
 </a>
 
 Does your project run a Factory? Put **Mr. GAF** (above — that's exactly how
