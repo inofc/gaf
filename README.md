@@ -111,6 +111,32 @@ rewiring, and any runner or model can execute a role), and **nothing happens
 without a public paper trail** (no verdict without an assessment, no ship
 without a report, every approved idea in a ledger).
 
+## Powered by GAF — show the badge
+
+Does your project run a Factory? Put **Mr. GAF** on your site or README and
+link back here, so your users know who ships their ideas.
+
+**Markdown** (README, docs):
+
+```markdown
+[![Powered by Mr. GAF — Generative AI Factory](https://raw.githubusercontent.com/inofc/gaf/main/assets/mr-gaf.png)](https://github.com/inofc/gaf)
+```
+
+**HTML** (websites — sized for a footer):
+
+```html
+<a href="https://github.com/inofc/gaf" title="Powered by GAF — Generative AI Factory">
+  <img src="https://raw.githubusercontent.com/inofc/gaf/main/assets/mr-gaf.png"
+       alt="Powered by Mr. GAF — Generative AI Factory" width="140">
+</a>
+```
+
+**Text-only badge** (when an image doesn't fit):
+
+```markdown
+[![Powered by GAF](https://img.shields.io/badge/Powered_by-🎩_Mr._GAF-8A1C1C?labelColor=161A3C)](https://github.com/inofc/gaf)
+```
+
 ## License
 
 Licensed under the [Apache License 2.0](./LICENSE) — use it, install it in
