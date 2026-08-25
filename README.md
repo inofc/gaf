@@ -1,5 +1,7 @@
 # 🎩 GAF — Generative AI Factory
 
+**🌐 [gaf-site.vercel.app](https://gaf-site.vercel.app)** — meet Mr. GAF and get the one-command install.
+
 **GAF is a pattern; a Factory is one installation of it.** It turns a software
 project into one that improves itself: the community proposes ideas, votes on
 them, and independently scheduled AI roles review, build, and ship the winners
