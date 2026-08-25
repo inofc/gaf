@@ -37,7 +37,19 @@ here exists because of a real success or a real failure in one of them.
 
 ## Installing it in a project
 
-Copy this repository's contents into the target project as a skill, then run it:
+One command, from the target project's root:
+
+```bash
+npx skills add inofc/gaf
+```
+
+It installs the `gaf-setup` skill for Claude Code and other agents
+(Cursor, Codex, Cline, …) and can update it later (`npx skills update`).
+
+<details>
+<summary>Manual install (no npx)</summary>
+
+Copy this repository's contents into the target project as a skill:
 
 ```bash
 mkdir -p .claude/skills/gaf-setup
@@ -45,7 +57,11 @@ mkdir -p .claude/skills/gaf-setup
 ```
 
 The folder must be named **`gaf-setup`** to match the `name:` in `SKILL.md`'s
-frontmatter. Then, in a session on that project:
+frontmatter.
+
+</details>
+
+Then, in a session on that project:
 
 > *"Set up a GAF in this project — read `.claude/skills/gaf-setup/SKILL.md`
 > and follow it."*
