@@ -113,8 +113,14 @@ without a report, every approved idea in a ledger).
 
 ## Powered by GAF — show the badge
 
-Does your project run a Factory? Put **Mr. GAF** on your site or README and
-link back here, so your users know who ships their ideas.
+<a href="https://github.com/inofc/gaf" title="Powered by GAF — Generative AI Factory">
+  <img src="./assets/mr-gaf-badge.png"
+       alt="Powered by Mr. GAF — Generative AI Factory" width="140">
+</a>
+
+Does your project run a Factory? Put **Mr. GAF** (above — that's exactly how
+the badge renders) on your site or README and link back here, so your users
+know who ships their ideas.
 
 **Markdown** (README, docs):
 
